@@ -1,40 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="index.js" defer></script>
 </head>
+
 <body>
     <h1>StreamForge</h1>
     <p>Live stream your video among wrold wide</p>
-    
+
+    <div>
+        <div id="message"></div>
+    </div>
+
     <div>
         <h2>Your Video</h1>
-        <div>
-            <video id="self-video" autoplay playsinline></video>            
             <div>
-                <button id="self-start-btn">Start Cam</button>
-                <button id="self-stop-btn">Stop Cam</button>
-                <button id="download-btn" disabled>Download Video</button>
+                <video id="self-video" autoplay playsinline></video>
+                <div class="video-label">You</div>
+                <div>
+                    <button id="self-start-btn">Start Cam</button>
+                    <button id="self-stop-btn">Stop Cam</button>
+                    <button id="download-btn" disabled>Download Video</button>
+                </div>
             </div>
-        </div>
+            <h2>Other Videos in the hub</h2>
+            <div id="video-grid" class="video-grid"></div>
 
     </div>
 
     <div>
         <h2>ChatBox</h2>
         <div>
-            <div>
-                <div id="message"></div>
-            </div>
+
             <div>
                 <input type="text" name="" id="message-input" placeholder="Write a comment">
                 <button onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
-    
+
 </body>
+
 </html>

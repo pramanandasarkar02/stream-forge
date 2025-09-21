@@ -17,7 +17,7 @@ func main(){
 
 	hub := core.NewHub() 
 
-	http.HandleFunc("/ws", core.HubHandler(hub))
+	http.HandleFunc("/ws/chat", core.HubHandler(hub))
 
 
 	log.Println("server started at http://localhost:8080")
