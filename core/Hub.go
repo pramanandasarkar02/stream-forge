@@ -1,54 +1,81 @@
 package core
 
 import (
+	"encoding/json"
 	"log"
 	"sync"
-
-	"github.com/gorilla/websocket"
 )
 
 
-type Peer struct {
-	Name string
-	Conn *websocket.Conn
-	Send chan []byte
-}
-
 
 type Hub struct{
-	peers map[*Peer]bool
-	mu sync.Mutex
+	Peers map[*Peer]bool
+	BroadcastChan chan []byte
+	Register chan *Peer
+	Unregister chan *Peer
+	Mutex  sync.RWMutex
 }
+
 
 func NewHub() *Hub {
 	return &Hub{
-		peers: make(map[*Peer]bool),
+		Peers: make(map[*Peer]bool),
+		BroadcastChan: make(chan []byte),
+		Register: make(chan *Peer),
+		Unregister: make(chan *Peer),
 	}
 }
 
-func (h *Hub) Add(p *Peer) {
-	log.Println("Peer added with name: ", p.Name)
-	h.mu.Lock()
-	h.peers[p] = true
-	h.mu.Unlock()
-}
 
-func (h *Hub) Remove(p *Peer) {
-	log.Println("Peer Removed with name: ", p.Name)
-	h.mu.Lock()
-	delete(h.peers, p)
-	h.mu.Unlock()
-	p.Conn.Close()
-}
+func (hub* Hub) Run() {
+	for {
+		select{
+		case peer := <-hub.Register:
+			hub.Mutex.Lock()
+			hub.Peers[peer] = true
+			hub.Mutex.Unlock()
 
-func (h *Hub) Broadcast(frame []byte) {
-	h.mu.Lock()
-	for p := range h.peers {
-		select {
-		case p.Send <- frame:
-		default:
+			log.Printf("peer %s connected. Total peers: %d", peer.ID, len(hub.Peers))
+
+			welcomeMsg := Message{
+				Type: "connected",
+				Data: map[string]interface{}{
+					"peerId": peer.ID,
+					"isHost": peer.IsHost,
+				},
+			}
+			data, _ := json.Marshal(welcomeMsg)
+			select{
+			case peer.Send <- data:
+			default:
+				close(peer.Send)
+				delete(hub.Peers, peer)
+			}
+		case peer := <-hub.Unregister:
+			hub.Mutex.Lock()
+			if _, ok := hub.Peers[peer]; ok {
+				delete(hub.Peers, peer)
+				close(peer.Send)
+				log.Printf("Peer %s disconnected. Total Peers: %d", peer.ID, len(hub.Peers))
+			}
+			hub.Mutex.Unlock()
+
+		case message := <- hub.BroadcastChan:
+			hub.Mutex.RLock()
+			for peer := range hub.Peers {
+				select {
+				case peer.Send <- message:
+				default:
+					close(peer.Send)
+					delete(hub.Peers, peer)
+				}
+			}
+			hub.Mutex.RUnlock()
+
 		}
 	}
-	h.mu.Unlock()
 }
+
+
+
 

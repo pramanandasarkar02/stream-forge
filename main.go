@@ -15,9 +15,17 @@ func main(){
 	// functionality service
 	http.HandleFunc("/upload", core.UploadHandler)
 
-	hub := core.NewHub() 
+	// chatHub := core.NewHub()
+	// videoHub := core.NewHub() 
 
-	http.HandleFunc("/ws/chat", core.HubHandler(hub))
+	// http.HandleFunc("/ws/chat", core.HubChatHandler(chatHub))
+	// http.HandleFunc("/ws/video", core.HubStreamHandler(videoHub))
+
+
+	hub := core.NewHub()
+	go hub.Run()
+
+	http.HandleFunc("/ws", hub.HandleVideoWebSocket)
 
 
 	log.Println("server started at http://localhost:8080")
