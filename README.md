@@ -8,3 +8,4 @@ It is a live stream shearing platform.
 
 # contribution
 - anyone can contribute to the project 
+
